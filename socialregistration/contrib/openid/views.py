@@ -1,3 +1,4 @@
+from openid.consumer.consumer import DiscoveryFailure
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
@@ -20,8 +21,11 @@ class OpenIDRedirect(SocialRegistration, View):
             request.POST.get('openid_provider'))
         
         request.session[self.get_client().get_session_key()] = client
-        
-        return HttpResponseRedirect(client.get_redirect_url())
+
+        try:
+            return HttpResponseRedirect(client.get_redirect_url())
+        except DiscoveryFailure, e:
+            return self.error_to_response(request, {'error': e.message})
 
 class OpenIDCallback(SocialRegistration, View):
     template_name = 'socialregistration/openid/openid.html'
