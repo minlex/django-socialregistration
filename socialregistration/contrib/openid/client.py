@@ -17,7 +17,7 @@ class OpenIDClient(Client):
         self.store = OpenIDStore()
         self.consumer = consumer.Consumer(session_data, self.store)
         self.ax_attrs = ax_attrs
-        self.sreg_attrs = sreg_attrs        
+        self.sreg_attrs = sreg_attrs
     
     def get_realm(self):
         if self.is_https():
@@ -53,7 +53,7 @@ class OpenIDClient(Client):
     
     def get_identity(self):
         return self.result.identity_url
-        
+    
     def get_ax_result(self):
         if not self.ax_attrs:
             return {}
@@ -62,21 +62,21 @@ class OpenIDClient(Client):
             ax_response = ax.FetchResponse.fromSuccessResponse(self.result)
             print self.result
             if ax_response:
-                self.ax_result = {ax_attr: ax_response.getSingle(AX_ATTRS[ax_attr], None) 
+                self.ax_result = {ax_attr: ax_response.getSingle(AX_ATTRS[ax_attr], None)
                                  for ax_attr in self.ax_attrs}
             else:
                 return {}
-            
-        return self.ax_result
         
+        return self.ax_result
+    
     def get_sreg_result(self):
         if not self.sreg_attrs:
             return {}
 
         if not hasattr(self, 'sreg_result'):
             self.sreg_result = sreg.SRegResponse.fromSuccessResponse(self.result) or {}
-                
-        return self.sreg_result    
+        
+        return self.sreg_result
     
     @staticmethod
     def get_session_key():

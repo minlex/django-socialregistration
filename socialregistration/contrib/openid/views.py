@@ -10,7 +10,7 @@ from socialregistration.views import SetupCallback
 
 class OpenIDRedirect(SocialRegistration, View):
     client = OpenIDClient
-        
+    
     def post(self, request):
         request.session['next'] = self.get_next(request)
 
