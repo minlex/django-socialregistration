@@ -14,11 +14,14 @@ class OpenIDRedirect(SocialRegistration, View):
     def post(self, request):
         request.session['next'] = self.get_next(request)
 
+        ax_attrs = request.POST.getlist('ax_attributes');
+        sreg_attrs = request.POST.getlist('sreg_attributes');
         # We don't want to pass in the whole session object as this might not 
         # be pickleable depending on what session backend one is using. 
         # See issue #73
         client = self.get_client()(dict(request.session.items()),
-            request.POST.get('openid_provider'))
+            request.POST.get('openid_provider'), ax_attrs=ax_attrs,
+            sreg_attrs=sreg_attrs)
         
         request.session[self.get_client().get_session_key()] = client
 
