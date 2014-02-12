@@ -1,3 +1,4 @@
+from openid.consumer.consumer import DiscoveryFailure
 from django.core.urlresolvers import reverse
 from django.http import HttpResponseRedirect
 from django.utils.translation import ugettext_lazy as _
@@ -13,15 +14,21 @@ class OpenIDRedirect(SocialRegistration, View):
     def post(self, request):
         request.session['next'] = self.get_next(request)
 
+        ax_attrs = request.POST.getlist('ax_attributes');
+        sreg_attrs = request.POST.getlist('sreg_attributes');
         # We don't want to pass in the whole session object as this might not 
         # be pickleable depending on what session backend one is using. 
         # See issue #73
         client = self.get_client()(dict(request.session.items()),
-            request.POST.get('openid_provider'))
+            request.POST.get('openid_provider'), ax_attrs=ax_attrs,
+            sreg_attrs=sreg_attrs)
         
         request.session[self.get_client().get_session_key()] = client
-        
-        return HttpResponseRedirect(client.get_redirect_url())
+
+        try:
+            return HttpResponseRedirect(client.get_redirect_url())
+        except DiscoveryFailure, e:
+            return self.error_to_response(request, {'error': e.message})
 
 class OpenIDCallback(SocialRegistration, View):
     template_name = 'socialregistration/openid/openid.html'

@@ -9,12 +9,12 @@ import json
 class Twitter(OAuth):
     api_key = getattr(settings, 'TWITTER_CONSUMER_KEY', '')
     secret_key = getattr(settings, 'TWITTER_CONSUMER_SECRET_KEY', '')
-    
+
     request_token_url = 'https://api.twitter.com/oauth/request_token'
     access_token_url = 'https://api.twitter.com/oauth/access_token'
     auth_url = 'https://api.twitter.com/oauth/authenticate'
-    
-    info_url = 'https://api.twitter.com/1/account/verify_credentials.json'
+
+    info_url = 'https://api.twitter.com/1.1/account/verify_credentials.json'
 
     def get_callback_url(self, **kwargs):
         if self.is_https():
@@ -24,7 +24,7 @@ class Twitter(OAuth):
         return urlparse.urljoin(
             'http://%s' % Site.objects.get_current().domain,
             reverse('socialregistration:twitter:callback'))
-    
+
     def get_user_info(self):
         dct = self._access_token_dict or {}
 
