@@ -152,7 +152,7 @@ class Setup(SocialRegistration, View):
             return self.error_to_response(request, dict(
                 error=_("A social profile is missing from your session.")))
         
-        form = self.get_form()(request.POST, request.FILES,
+        form = self.get_form()(data=request.POST, files=request.FILES,
             initial=self.get_initial_data(request, user, profile, client))
         
         if not form.is_valid():
