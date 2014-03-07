@@ -6,6 +6,9 @@ from socialregistration.contrib.twitter.models import TwitterProfile
 class TwitterAuth(ModelBackend):
     
     def authenticate(self, twitter_id=None):
+        if twitter_id is None:
+            return None
+
         try:
             return TwitterProfile.objects.get(
                 twitter_id=twitter_id,

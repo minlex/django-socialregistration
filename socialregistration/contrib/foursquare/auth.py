@@ -4,6 +4,9 @@ from socialregistration.contrib.foursquare.models import FoursquareProfile
 
 class FoursquareAuth(ModelBackend):
     def authenticate(self, foursquare=None):
+        if foursquare is None:
+            return None
+
         try:
             return FoursquareProfile.objects.get(
                 foursquare=foursquare,

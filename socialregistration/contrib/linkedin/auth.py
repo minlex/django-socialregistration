@@ -8,6 +8,9 @@ class LinkedInAuth(ModelBackend):
     supports_anonymous_user = False
     
     def authenticate(self, linkedin_id=None):
+        if linkedin_id is None:
+            return None
+
         try:
             return LinkedInProfile.objects.get(
                 linkedin_id=linkedin_id,

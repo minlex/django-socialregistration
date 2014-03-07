@@ -8,6 +8,9 @@ class FacebookAuth(ModelBackend):
     supports_anonymous_user = False
     
     def authenticate(self, uid = None):
+        if uid is None:
+            return None
+
         try:
             return FacebookProfile.objects.get(
                 uid = uid,

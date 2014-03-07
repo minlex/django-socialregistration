@@ -5,6 +5,9 @@ from django.contrib.auth.backends import ModelBackend
 
 class InstagramAuth(ModelBackend):
     def authenticate(self, instagram = None):
+        if instagram is None:
+            return None
+
         try:
             return InstagramProfile.objects.get(
                 instagram = instagram,

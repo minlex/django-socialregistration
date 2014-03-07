@@ -5,6 +5,9 @@ from django.contrib.auth.backends import ModelBackend
 
 class GithubAuth(ModelBackend):
     def authenticate(self, github = None):
+        if github is None:
+            return None
+
         try:
             return GithubProfile.objects.get(
                 github = github,

@@ -5,6 +5,9 @@ from socialregistration.contrib.tumblr.models import TumblrProfile
 
 class TumblrAuth(ModelBackend):
     def authenticate(self, tumblr=None):
+        if tumblr is None:
+            return None
+
         try:
             return TumblrProfile.objects.get(
                 tumblr=tumblr,

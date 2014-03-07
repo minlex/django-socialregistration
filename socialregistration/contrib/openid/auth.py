@@ -6,6 +6,9 @@ from socialregistration.contrib.openid.models import OpenIDProfile
 
 class OpenIDAuth(ModelBackend):
     def authenticate(self, identity=None):
+        if identity is None:
+            return None
+
         try:
             return OpenIDProfile.objects.get(
                 identity=identity,
