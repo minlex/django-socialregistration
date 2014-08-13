@@ -1,20 +1,28 @@
 # encoding: utf-8
-import datetime
 from south.db import db
 from south.v2 import DataMigration
-from django.db import models
+
 
 class Migration(DataMigration):
 
     def forwards(self, orm):
-        print "Doing idempotent OpenIDProfile transfer..."
-        db.execute("INSERT INTO openid_openidprofile (id, user_id, site_id, identity) (SELECT id, user_id, site_id, identity FROM socialregistration_openidprofile WHERE identity NOT IN (SELECT identity FROM openid_openidprofile))")
-        db.execute("SELECT setval('openid_openidprofile_id_seq', (SELECT MAX(id) + 1 FROM openid_openidprofile))")
-
+        connection = db._get_connection()
+        table_names = connection.introspection.table_names()
+        if 'socialregistration_openidprofile' in table_names:
+            print "Doing idempotent OpenIDProfile transfer..."
+            db.execute(
+                "INSERT INTO openid_openidprofile (id, user_id, site_id, "
+                "identity) (SELECT id, user_id, site_id, identity FROM "
+                "socialregistration_openidprofile WHERE identity NOT IN "
+                "(SELECT identity FROM openid_openidprofile))"
+            )
+            db.execute(
+                "SELECT setval('openid_openidprofile_id_seq', "
+                "(SELECT MAX(id) + 1 FROM openid_openidprofile))"
+            )
 
     def backwards(self, orm):
         pass
-
 
     models = {
         'auth.group': {
