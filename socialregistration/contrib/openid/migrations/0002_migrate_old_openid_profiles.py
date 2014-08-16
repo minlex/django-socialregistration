@@ -1,28 +1,28 @@
 # encoding: utf-8
-import datetime
 from south.db import db
-from south.v2 import SchemaMigration
-from django.db import models
+from south.v2 import DataMigration
 
-class Migration(SchemaMigration):
+
+class Migration(DataMigration):
 
     def forwards(self, orm):
-        
-        # Adding unique constraint on 'TwitterProfile', fields ['user']
-        db.create_unique('socialregistration_twitterprofile', ['user_id'])
-
-        # Adding unique constraint on 'FacebookProfile', fields ['user']
-        db.create_unique('socialregistration_facebookprofile', ['user_id'])
-
+        connection = db._get_connection()
+        table_names = connection.introspection.table_names()
+        if 'socialregistration_openidprofile' in table_names:
+            print "Doing idempotent OpenIDProfile transfer..."
+            db.execute(
+                "INSERT INTO openid_openidprofile (id, user_id, site_id, "
+                "identity) (SELECT id, user_id, site_id, identity FROM "
+                "socialregistration_openidprofile WHERE identity NOT IN "
+                "(SELECT identity FROM openid_openidprofile))"
+            )
+            db.execute(
+                "SELECT setval('openid_openidprofile_id_seq', "
+                "(SELECT MAX(id) + 1 FROM openid_openidprofile))"
+            )
 
     def backwards(self, orm):
-        
-        # Removing unique constraint on 'FacebookProfile', fields ['user']
-        db.delete_unique('socialregistration_facebookprofile', ['user_id'])
-
-        # Removing unique constraint on 'TwitterProfile', fields ['user']
-        db.delete_unique('socialregistration_twitterprofile', ['user_id'])
-
+        pass
 
     models = {
         'auth.group': {
@@ -61,26 +61,7 @@ class Migration(SchemaMigration):
             'model': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'name': ('django.db.models.fields.CharField', [], {'max_length': '100'})
         },
-        'sites.site': {
-            'Meta': {'ordering': "('domain',)", 'object_name': 'Site', 'db_table': "'django_site'"},
-            'domain': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
-        },
-        'socialregistration.facebookaccesstoken': {
-            'Meta': {'object_name': 'FacebookAccessToken'},
-            'access_token': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'profile': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'access_token'", 'unique': 'True', 'to': "orm['socialregistration.FacebookProfile']"})
-        },
-        'socialregistration.facebookprofile': {
-            'Meta': {'object_name': 'FacebookProfile'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'site': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sites.Site']"}),
-            'uid': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'unique': 'True'})
-        },
-        'socialregistration.openidnonce': {
+        'openid.openidnonce': {
             'Meta': {'object_name': 'OpenIDNonce'},
             'date_created': ('django.db.models.fields.DateTimeField', [], {'auto_now_add': 'True', 'blank': 'True'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
@@ -88,14 +69,14 @@ class Migration(SchemaMigration):
             'server_url': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'timestamp': ('django.db.models.fields.IntegerField', [], {})
         },
-        'socialregistration.openidprofile': {
+        'openid.openidprofile': {
             'Meta': {'object_name': 'OpenIDProfile'},
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'identity': ('django.db.models.fields.TextField', [], {}),
+            'identity': ('django.db.models.fields.TextField', [], {'unique': 'True'}),
             'site': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sites.Site']"}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'unique': 'True'})
+            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']"})
         },
-        'socialregistration.openidstore': {
+        'openid.openidstore': {
             'Meta': {'object_name': 'OpenIDStore'},
             'assoc_type': ('django.db.models.fields.TextField', [], {}),
             'handle': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
@@ -106,27 +87,12 @@ class Migration(SchemaMigration):
             'server_url': ('django.db.models.fields.CharField', [], {'max_length': '255'}),
             'site': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sites.Site']"})
         },
-        'socialregistration.twitteraccesstoken': {
-            'Meta': {'object_name': 'TwitterAccessToken'},
+        'sites.site': {
+            'Meta': {'ordering': "('domain',)", 'object_name': 'Site', 'db_table': "'django_site'"},
+            'domain': ('django.db.models.fields.CharField', [], {'max_length': '100'}),
             'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'oauth_token': ('django.db.models.fields.CharField', [], {'max_length': '80'}),
-            'oauth_token_secret': ('django.db.models.fields.CharField', [], {'max_length': '80'}),
-            'profile': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'access_token'", 'unique': 'True', 'to': "orm['socialregistration.TwitterProfile']"})
-        },
-        'socialregistration.twitterprofile': {
-            'Meta': {'object_name': 'TwitterProfile'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'site': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['sites.Site']"}),
-            'twitter_id': ('django.db.models.fields.PositiveIntegerField', [], {}),
-            'user': ('django.db.models.fields.related.ForeignKey', [], {'to': "orm['auth.User']", 'unique': 'True'})
-        },
-        'socialregistration.twitterrequesttoken': {
-            'Meta': {'object_name': 'TwitterRequestToken'},
-            'id': ('django.db.models.fields.AutoField', [], {'primary_key': 'True'}),
-            'oauth_token': ('django.db.models.fields.CharField', [], {'max_length': '80'}),
-            'oauth_token_secret': ('django.db.models.fields.CharField', [], {'max_length': '80'}),
-            'profile': ('django.db.models.fields.related.OneToOneField', [], {'related_name': "'request_token'", 'unique': 'True', 'to': "orm['socialregistration.TwitterProfile']"})
+            'name': ('django.db.models.fields.CharField', [], {'max_length': '50'})
         }
     }
 
-    complete_apps = ['socialregistration']
+    complete_apps = ['openid']
