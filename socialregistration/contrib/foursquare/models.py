@@ -2,13 +2,14 @@ from django.conf import settings
 from django.contrib.auth import authenticate
 from django.contrib.sites.models import Site
 from django.db import models
+from socialregistration.models import get_default_site
 from socialregistration.signals import connect
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 class FoursquareProfile(models.Model):
     user = models.ForeignKey(AUTH_USER_MODEL, unique=True)
-    site = models.ForeignKey(Site, default=Site.objects.get_current)
+    site = models.ForeignKey(Site, default=get_default_site)
     foursquare = models.CharField(max_length=255)
 
     def __unicode__(self):

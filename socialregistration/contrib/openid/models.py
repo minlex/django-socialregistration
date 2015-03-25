@@ -2,12 +2,13 @@ from django.conf import settings
 from django.db import models
 from django.contrib.sites.models import Site
 from django.contrib.auth import authenticate
+from socialregistration.models import get_default_site
 
 AUTH_USER_MODEL = getattr(settings, 'AUTH_USER_MODEL', 'auth.User')
 
 class OpenIDProfile(models.Model):
     user = models.ForeignKey(AUTH_USER_MODEL)
-    site = models.ForeignKey(Site, default=Site.objects.get_current)
+    site = models.ForeignKey(Site, default=get_default_site)
     identity = models.TextField()
 
     def __unicode__(self):
@@ -20,7 +21,7 @@ class OpenIDProfile(models.Model):
         return authenticate(identity=self.identity)
 
 class OpenIDStore(models.Model):
-    site = models.ForeignKey(Site, default=Site.objects.get_current)
+    site = models.ForeignKey(Site, default=get_default_site)
     server_url = models.CharField(max_length=255)
     handle = models.CharField(max_length=255)
     secret = models.TextField()
