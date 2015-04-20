@@ -1,4 +1,4 @@
-from django.contrib.sites.models import Site
+from django.conf import settings
 
 def get_default_site():
-    return Site.objects.get_current()
+    return settings.SITE_ID
