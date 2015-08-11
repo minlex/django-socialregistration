@@ -10,6 +10,8 @@ import logging
 import oauth2 as oauth
 import urllib
 import urlparse
+from random import SystemRandom
+from string import ascii_lowercase, digits
 
 logger = logging.getLogger(__name__)
 
@@ -57,7 +59,6 @@ class OAuth(Client):
     
     def __init__(self, access_token=None, access_token_secret=None):
         self.consumer = oauth.Consumer(self.api_key, self.secret_key)
-        
         if access_token and access_token_secret:
             self._access_token = oauth.Token(access_token, access_token_secret)
         
@@ -230,10 +231,15 @@ class OAuth2(Client):
     
     # Memoized user info fetched once an access token was obtained
     _user_info = None
-    
+
+    # The state for protection from CSRF
+    state = None
+
     def __init__(self, access_token=None):
         self._access_token = access_token
-    
+        self.state = ''.join(SystemRandom().choice(ascii_lowercase + digits)
+                             for _ in range(12))
+
     def client(self):
         ca_certs = getattr(settings, 'HTTPLIB2_CA_CERTS', None)
         return httplib2.Http(ca_certs=ca_certs, timeout=TIMEOUT)
@@ -243,14 +249,16 @@ class OAuth2(Client):
         Assemble the URL to where we'll be redirecting the user to to request
         permissions.
         """
+        if state != '':
+            self.state = state
         params = {
             'response_type': 'code',
             'client_id': self.client_id,
             'redirect_uri': self.get_callback_url(**kwargs),
             'scope': self.scope or '',
-            'state': state,
+            'state': self.state
         }
-        
+
         return '%s?%s' % (self.auth_url, urllib.urlencode(params))
     
     def parse_access_token(self, content):
@@ -324,6 +332,10 @@ class OAuth2(Client):
             raise OAuthError(
                 _("Received error while obtaining access token from %s: %s") % (
                     self.access_token_url, GET['error']))
+
+        if self.state != GET['state']:
+            raise OAuthError("State does not match: %s" % GET['state'])
+
         return self.get_access_token(code=GET.get('code'))        
 
     def get_signing_params(self):
