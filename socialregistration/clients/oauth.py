@@ -59,6 +59,7 @@ class OAuth(Client):
     
     def __init__(self, access_token=None, access_token_secret=None):
         self.consumer = oauth.Consumer(self.api_key, self.secret_key)
+
         if access_token and access_token_secret:
             self._access_token = oauth.Token(access_token, access_token_secret)
         
@@ -258,7 +259,6 @@ class OAuth2(Client):
             'scope': self.scope or '',
             'state': self.state
         }
-
         return '%s?%s' % (self.auth_url, urllib.urlencode(params))
     
     def parse_access_token(self, content):
