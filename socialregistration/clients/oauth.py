@@ -1,6 +1,7 @@
 from django.utils.encoding import smart_unicode
 from django.utils.translation import ugettext_lazy as _
 from socialregistration.clients import Client
+from django.utils.crypto import constant_time_compare
 
 from django.conf import settings
 
@@ -333,7 +334,7 @@ class OAuth2(Client):
                 _("Received error while obtaining access token from %s: %s") % (
                     self.access_token_url, GET['error']))
 
-        if self.state != GET['state']:
+        if not constant_time_compare(self.state,GET['state']):
             raise OAuthError("State does not match: %s" % GET['state'])
 
         return self.get_access_token(code=GET.get('code'))        
