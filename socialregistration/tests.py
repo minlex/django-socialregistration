@@ -250,13 +250,13 @@ class OAuth2Test(OAuthTest):
 
     def redirect(self):
         response = self.client.post(self.get_redirect_url())
-        self.state = re.findall('state=([\w\d]+)&',response['Location'])[0]
+        self._state = re.findall('state=([\w\d]+)&',response['Location'])[0]
         return response
     
     @mock.patch('socialregistration.clients.oauth.OAuth2.request')
     def callback(self, MockRequest):
         MockRequest.side_effect = get_mock_func(self.get_callback_mock_response)
-        response = self.client.get(self.get_callback_url(), {'code': 'abc','state':self.state})
+        response = self.client.get(self.get_callback_url(), {'code': 'abc','state':self._state})
         return response
     
     @mock.patch('socialregistration.clients.oauth.OAuth2.request')

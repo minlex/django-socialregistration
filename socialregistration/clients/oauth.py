@@ -1,7 +1,7 @@
 from django.utils.encoding import smart_unicode
 from django.utils.translation import ugettext_lazy as _
 from socialregistration.clients import Client
-from django.utils.crypto import constant_time_compare
+from django.utils.crypto import constant_time_compare, get_random_string
 
 from django.conf import settings
 
@@ -11,7 +11,6 @@ import logging
 import oauth2 as oauth
 import urllib
 import urlparse
-from random import SystemRandom
 from string import ascii_lowercase, digits
 
 logger = logging.getLogger(__name__)
@@ -235,12 +234,11 @@ class OAuth2(Client):
     _user_info = None
 
     # The state for protection from CSRF
-    state = None
+    _state = None
 
     def __init__(self, access_token=None):
         self._access_token = access_token
-        self.state = ''.join(SystemRandom().choice(ascii_lowercase + digits)
-                             for _ in range(12))
+        self._state = get_random_string()
 
     def client(self):
         ca_certs = getattr(settings, 'HTTPLIB2_CA_CERTS', None)
@@ -252,13 +250,13 @@ class OAuth2(Client):
         permissions.
         """
         if state != '':
-            self.state = state
+            self._state = state
         params = {
             'response_type': 'code',
             'client_id': self.client_id,
             'redirect_uri': self.get_callback_url(**kwargs),
             'scope': self.scope or '',
-            'state': self.state
+            'state': self._state
         }
         return '%s?%s' % (self.auth_url, urllib.urlencode(params))
     
@@ -334,7 +332,7 @@ class OAuth2(Client):
                 _("Received error while obtaining access token from %s: %s") % (
                     self.access_token_url, GET['error']))
 
-        if not constant_time_compare(self.state,GET['state']):
+        if not constant_time_compare(self._state, GET['state']):
             raise OAuthError("State does not match: %s" % GET['state'])
 
         return self.get_access_token(code=GET.get('code'))        
