@@ -244,13 +244,11 @@ class OAuth2(Client):
         ca_certs = getattr(settings, 'HTTPLIB2_CA_CERTS', None)
         return httplib2.Http(ca_certs=ca_certs, timeout=TIMEOUT)
     
-    def get_redirect_url(self, state='', **kwargs):
+    def get_redirect_url(self, **kwargs):
         """
         Assemble the URL to where we'll be redirecting the user to to request
         permissions.
         """
-        if state != '':
-            self._state = state
         params = {
             'response_type': 'code',
             'client_id': self.client_id,
