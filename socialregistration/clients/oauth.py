@@ -11,7 +11,6 @@ import logging
 import oauth2 as oauth
 import urllib
 import urlparse
-from string import ascii_lowercase, digits
 
 logger = logging.getLogger(__name__)
 
@@ -331,7 +330,7 @@ class OAuth2(Client):
                     self.access_token_url, GET['error']))
 
         if not constant_time_compare(self._state, GET['state']):
-            raise OAuthError("State does not match: %s" % GET['state'])
+            raise OAuthError(_("State parameter missing or incorrect"))
 
         return self.get_access_token(code=GET.get('code'))        
 
