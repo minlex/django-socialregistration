@@ -329,7 +329,7 @@ class OAuth2(Client):
                 _("Received error while obtaining access token from %s: %s") % (
                     self.access_token_url, GET['error']))
 
-        if (not 'state' in GET) or (not constant_time_compare(self._state, GET['state'])):
+        if 'state' not in GET or not constant_time_compare(self._state, GET['state']):
             raise OAuthError(_("State parameter missing or incorrect"))
 
         return self.get_access_token(code=GET.get('code'))        

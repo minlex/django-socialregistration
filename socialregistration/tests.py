@@ -265,8 +265,17 @@ class OAuth2Test(OAuthTest):
         response = self.client.get(self.get_setup_callback_url())
         return response
 
-    
-    
+    def test_state_is_invalid(self):
+        self.redirect()
+        response = self.client.get(self.get_callback_url(), {'code': 'abc', 'state': "aaaa"})
+        self.assertContains(response, "State parameter missing or incorrect")
+
+    def test_state_is_missing(self):
+        self.redirect()
+        response = self.client.get(self.get_callback_url(), {'code': 'abc'})
+        self.assertContains(response, "State parameter missing or incorrect")
+
+
 class TestContextProcessors(TestCase):
     def test_request_is_in_context(self):
         self.assertTrue('django.core.context_processors.request' in settings.TEMPLATE_CONTEXT_PROCESSORS)
