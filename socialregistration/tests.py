@@ -8,6 +8,7 @@ from socialregistration.signals import login, connect
 import mock
 import urllib
 import urlparse
+import re
 
 class TemplateTagTest(object):
     def get_tag(self):
@@ -249,12 +250,13 @@ class OAuth2Test(OAuthTest):
 
     def redirect(self):
         response = self.client.post(self.get_redirect_url())
+        self._state = re.findall('state=([\w\d]+)&', response['Location'])[0]
         return response
     
     @mock.patch('socialregistration.clients.oauth.OAuth2.request')
     def callback(self, MockRequest):
         MockRequest.side_effect = get_mock_func(self.get_callback_mock_response)
-        response = self.client.get(self.get_callback_url(), {'code': 'abc'})
+        response = self.client.get(self.get_callback_url(), {'code': 'abc', 'state': self._state})
         return response
     
     @mock.patch('socialregistration.clients.oauth.OAuth2.request')
@@ -263,8 +265,17 @@ class OAuth2Test(OAuthTest):
         response = self.client.get(self.get_setup_callback_url())
         return response
 
-    
-    
+    def test_state_is_invalid(self):
+        self.redirect()
+        response = self.client.get(self.get_callback_url(), {'code': 'abc', 'state': "aaaa"})
+        self.assertContains(response, "State parameter missing or incorrect")
+
+    def test_state_is_missing(self):
+        self.redirect()
+        response = self.client.get(self.get_callback_url(), {'code': 'abc'})
+        self.assertContains(response, "State parameter missing or incorrect")
+
+
 class TestContextProcessors(TestCase):
     def test_request_is_in_context(self):
         self.assertTrue('django.core.context_processors.request' in settings.TEMPLATE_CONTEXT_PROCESSORS)
