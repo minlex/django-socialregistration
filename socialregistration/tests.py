@@ -5,6 +5,7 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase
 from oauth2 import Client
 from socialregistration.signals import login, connect
+from socialregistration.contrib.facebook.models import FacebookProfile, FacebookAccessToken
 import mock
 import urllib
 import urlparse
@@ -274,6 +275,12 @@ class OAuth2Test(OAuthTest):
         self.redirect()
         response = self.client.get(self.get_callback_url(), {'code': 'abc'})
         self.assertContains(response, "State parameter missing or incorrect")
+
+    def test_passing_state_check(self):
+        self.redirect()
+        self.callback()
+        response = self.client.get(self.get_callback_url())
+        self.assertNotContains(response, "State parameter missing or incorrect",302)
 
 
 class TestContextProcessors(TestCase):
