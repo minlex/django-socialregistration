@@ -5,7 +5,6 @@ from django.core.urlresolvers import reverse
 from django.test import TestCase
 from oauth2 import Client
 from socialregistration.signals import login, connect
-from socialregistration.contrib.facebook.models import FacebookProfile, FacebookAccessToken
 import mock
 import urllib
 import urlparse
